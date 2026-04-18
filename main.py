@@ -7,7 +7,7 @@ def translate(text):
     return translated
 
 def ydl():
-    url = "https://youtu.be/b5818MUdMs4?si=ZJhs0bovRNiy2WuC"  #input("Hier URL einfügen:\n> ")
+    url = input("Hier URL einfügen:\n> ")
     ydl_opts = {
     "skip_download" : True,
     }
