@@ -10,13 +10,11 @@ def translate(text):
     translated = GoogleTranslator(source="korean", target="english").translate(text=text)
     return translated
 
-def translate_ytsubtitle(info):
-        captions = info["subtitles"]
-        captions_auto = info["automatic_captions"]   #automatic_captions ist ein dict mit allen Sprachen - ich brauche "ko" -> "ko" hat verschiedene Formate -> ich brauche "srt"
-        if "ko" in captions.keys():
-            ko_captions = captions["ko"]
-        elif "ko" in captions_auto.keys():
-            ko_captions = captions_auto["ko"]
+def translate_ytsubtitle(url):
+    with yt_dlp.YoutubeDL() as ydl:
+        info = ydl.extract_info(url, download=False) #dict mit ALLEN Video-infos (Titel, Dauer, ...) - auch mit "automatic_captions"
+        captions = info["automatic_captions"]   #automatic_captions ist ein dict mit allen Sprachen - ich brauche "ko" -> "ko" hat verschiedene Formate -> ich brauche "srt"
+        ko_captions = captions["ko"]    #ko_captions ist ein dict mit nur koreanisch, aber verschiedenen Formaten
         subtitles = [sub for sub in ko_captions if sub["ext"] == "srt"] #srt holen 
         r = requests.get(subtitles[0]["url"])
         lines = r.text.split("\n\n") #r.text gibt wegen srt zeilen aus, deshalb in list holen
@@ -27,16 +25,6 @@ def translate_ytsubtitle(info):
                 timestamp.append({"timestamp":parts[1], "text":parts[2]})
         for t in timestamp:
             print(f"{t["timestamp"]}: \n{translate(t["text"])}\n")
-
-def smart_translate(url):
-    with yt_dlp.YoutubeDL() as ydl:
-        info = ydl.extract_info(url, download=False)   #dict mit ALLEN Video-infos (Titel, Dauer, ...) - auch mit "automatic_captions"
-        if "ko" in info["subtitles"] or "ko" in info["automatic_captions"]:
-            print("Untertitel gefunden, starte Übersetzung")
-            translate_ytsubtitle(info)
-        else:
-            print("Keine Untertitel gefunden, verwende AI um Audio zu übersetzen")
-            translate_audio(url)
 
 def download_audio(link):
     ydl_opts = {
@@ -52,18 +40,18 @@ def download_audio(link):
     with yt_dlp.YoutubeDL(ydl_opts) as video:
         video.download(link)
 
+
 def transcribe_audio():
-    result = model.transcribe("audio.mp3", task="translate", verbose=True)
+    result = model.transcribe("audio.mp3", language="ko", task="translate", verbose=True)
     print(result["text"])
 
 def translate_audio(url):
     download_audio(url)
     transcribe_audio()
-    os.remove("audio.mp3")
 
 def select():
     while True:
-        print("Was willst du machen?\n1. Übersetzen\n2. YouTube Video Übersetzen\n3. Beenden")
+        print("Was willst du machen?\n1. Übersetzen\n2.ydl\n3. Audio herunterladen\n4. Audio transkript erstellen\n5. Beenden")
         choice = int(input())
 
         if choice == 1:
@@ -71,14 +59,18 @@ def select():
             print(translate(text))
         elif choice == 2:
             url = input("Hier URL einfügen:\n> ")
-            smart_translate(url)
+            translate_ytsubtitle(url)
         elif choice == 3:
+            link = input("Hier URL einfügen:\n> ")
+            download_audio(link)
+        elif choice == 4:
+            transcribe_audio()
+        elif choice == 5: 
             break
         else:
             print("Keine gültige Eingabe")
 
 select()
-
 
 
 
