@@ -29,9 +29,9 @@ def translate_ytsubtitle(info):
         text = ""
         for t in timestamp:
             text = text + t
-            #print(f"{t["timestamp"]}: \n{translate(t["text"])}\n")
-        translated_full = translate(text)
-        print(translated_full)
+            print(f"{t["timestamp"]}: \n{translate(t["text"])}\n")
+        #translated_full = translate(text)
+        #print(translated_full)
 
 def smart_translate(url):
     with yt_dlp.YoutubeDL() as ydl:
